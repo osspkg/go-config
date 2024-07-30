@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	go.osspkg.com/casecheck v0.3.0
-	go.osspkg.com/ioutils v0.3.3
+	go.osspkg.com/ioutils v0.4.0
 )
 
 require (
