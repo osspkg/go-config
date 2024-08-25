@@ -29,9 +29,17 @@ type (
 
 func New(list ...Resolver) *Config {
 	return &Config{
-		data: nil,
+		data: &codec.BlobEncoder{
+			Blob: make([]byte, 0),
+			Ext:  ".yaml",
+		},
 		list: list,
 	}
+}
+
+func (v *Config) OpenBlob(b, ext string) {
+	v.data.Blob = []byte(b)
+	v.data.Ext = ext
 }
 
 func (v *Config) OpenFile(filename string) error {
@@ -39,10 +47,8 @@ func (v *Config) OpenFile(filename string) error {
 	if err != nil {
 		return err
 	}
-	v.data = &codec.BlobEncoder{
-		Blob: b,
-		Ext:  filepath.Ext(filename),
-	}
+	v.data.Blob = b
+	v.data.Ext = filepath.Ext(filename)
 	return nil
 }
 
