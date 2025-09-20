@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2024 Mikhail Knyazhev <markus621@yandex.com>. All rights reserved.
+ *  Copyright (c) 2024-2025 Mikhail Knyazhev <markus621@yandex.com>. All rights reserved.
  *  Use of this source code is governed by a BSD 3-Clause license that can be found in the LICENSE file.
  */
 
@@ -18,12 +18,18 @@ import (
 type (
 	Resolver interface {
 		Name() string
-		Value(name string) (string, bool)
+		Resolve(keys ...string) (map[string][]byte, error)
 	}
 
 	Config struct {
 		data *codec.BlobEncoder
 		list []Resolver
+	}
+
+	source struct {
+		Key     string
+		Pattern []byte
+		Default []byte
 	}
 )
 
@@ -66,14 +72,30 @@ func (v *Config) Build() error {
 		rex := regexp.MustCompile(fmt.Sprintf(`(?mUsi)@%s\((.+)#(.*)\)`, r.Name()))
 		submatchs := rex.FindAllSubmatch(v.data.Blob, -1)
 
-		for _, submatch := range submatchs {
-			pattern, key, defval := submatch[0], submatch[1], submatch[2]
+		sources := make([]source, 0, len(submatchs))
+		keys := make([]string, 0, len(submatchs))
 
-			if val, ok := r.Value(string(key)); ok && len(val) > 0 {
-				defval = []byte(val)
+		for _, submatch := range submatchs {
+			sources = append(sources, source{
+				Key:     string(submatch[1]),
+				Pattern: submatch[0],
+				Default: submatch[2],
+			})
+			keys = append(keys, string(submatch[1]))
+		}
+
+		values, err := r.Resolve(keys...)
+		if err != nil {
+			return fmt.Errorf("resolver '%s': %w", r.Name(), err)
+		}
+
+		for _, s := range sources {
+			val := bytes.TrimSpace(values[s.Key])
+			if len(val) < 1 {
+				val = s.Default
 			}
 
-			v.data.Blob = bytes.ReplaceAll(v.data.Blob, pattern, defval)
+			v.data.Blob = bytes.ReplaceAll(v.data.Blob, s.Pattern, val)
 		}
 	}
 	return nil
