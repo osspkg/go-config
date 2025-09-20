@@ -45,4 +45,8 @@ envs:
 	casecheck.NotEqual(t, "fail", tc.Envs.Home)
 	casecheck.NotEqual(t, "fail", tc.Envs.Path)
 	casecheck.NotEqual(t, "123", tc.Envs.Tmp)
+
+	res.Flush()
+	casecheck.Error(t, res.Build())
+	casecheck.Error(t, res.Decode(&tc))
 }

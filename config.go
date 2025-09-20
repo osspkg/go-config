@@ -37,10 +37,15 @@ func New(list ...Resolver) *Config {
 	return &Config{
 		data: &codec.BlobEncoder{
 			Blob: make([]byte, 0),
-			Ext:  ".yaml",
+			Ext:  "",
 		},
 		list: list,
 	}
+}
+
+func (v *Config) Flush() {
+	v.data.Blob = make([]byte, 0)
+	v.data.Ext = ""
 }
 
 func (v *Config) OpenBlob(b, ext string) {
@@ -59,12 +64,20 @@ func (v *Config) OpenFile(filename string) error {
 }
 
 func (v *Config) Decode(configs ...interface{}) error {
+	if len(v.data.Blob) == 0 || len(v.data.Ext) == 0 {
+		return fmt.Errorf("config is empty")
+	}
+
 	return v.data.Decode(configs...)
 }
 
 var rexName = regexp.MustCompile(`(?m)^[a-z][a-z0-9]+$`)
 
 func (v *Config) Build() error {
+	if len(v.data.Blob) == 0 || len(v.data.Ext) == 0 {
+		return fmt.Errorf("config is empty")
+	}
+
 	for _, r := range v.list {
 		if !rexName.MatchString(r.Name()) {
 			return fmt.Errorf("resolver '%s' has invalid name, must like regexp [a-z][a-z0-9]+", r.Name())
