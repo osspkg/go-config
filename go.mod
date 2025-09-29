@@ -1,10 +1,10 @@
 module go.osspkg.com/config
 
-go 1.24.0
+go 1.24.6
 
 require (
 	go.osspkg.com/casecheck v0.3.0
-	go.osspkg.com/ioutils v0.7.1
+	go.osspkg.com/ioutils v0.7.2
 )
 
 require (
